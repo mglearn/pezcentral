@@ -17,7 +17,7 @@ const MAX_CATEGORY_CHARS = 40;
 const MAX_TITLE_CHARS = 80;
 const MAX_DESCRIPTION_CHARS = 400;
 const MAX_EMAIL_CHARS = 120;
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2 MB decoded
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024; // 3 MB decoded
 const ALLOWED_STATUSES = ['pending', 'approved', 'hidden'];
 const ALLOWED_COLORS = ['yellow', 'blue', 'green', 'pink', 'purple', 'orange'];
 const ALLOWED_IMAGE_MIME = {
@@ -376,7 +376,7 @@ function saveUploadedImage(p) {
   }
   if (!bytes || !bytes.length) throw new Error('Image upload was empty.');
   if (bytes.length > MAX_IMAGE_BYTES) {
-    throw new Error('Image is too large. Please use one under 2 MB.');
+    throw new Error('Image is too large. Please use one under 3 MB.');
   }
 
   const ext = ALLOWED_IMAGE_MIME[mime];

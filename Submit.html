@@ -86,7 +86,7 @@ textarea{min-height:200px;resize:vertical;font-family:'DM Sans',sans-serif;line-
           </div>
           <input type="file" id="imageFile" class="file-input" accept="image/png,image/jpeg,image/webp,image/svg+xml">
         </div>
-        <p class="help">PNG, JPG, WEBP, or SVG. Up to about 1.5 MB. Optional, but useful for sketches, photos, or charts.</p>
+        <p class="help">PNG, JPG, WEBP, or SVG. Up to about 3 MB. Optional, but useful for sketches, photos, or charts.</p>
       </div>
       <div class="field"><label>Sticky Note Color</label><div class="colors">
         <label class="color-option"><input type="radio" name="color" value="yellow" checked><span class="swatch yellow" title="Yellow"></span></label>
@@ -106,7 +106,7 @@ textarea{min-height:200px;resize:vertical;font-family:'DM Sans',sans-serif;line-
 </main>
 <script src="config.js"></script>
 <script>
-const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const form=document.getElementById('noteForm'), note=document.getElementById('note'), count=document.getElementById('count'),
       success=document.getElementById('success'), errorBox=document.getElementById('error'), submitBtn=document.getElementById('submitBtn'),
       modeNotice=document.getElementById('modeNotice'), heading=document.getElementById('heading'), heroDescription=document.getElementById('heroDescription'),
@@ -126,7 +126,7 @@ imageFile.addEventListener('change',()=>{
   const file=imageFile.files && imageFile.files[0];
   if(!file) return;
   if(file.size > MAX_IMAGE_BYTES){
-    errorBox.textContent='Image is too large. Please choose a file under 1.5 MB.'; errorBox.style.display='block';
+    errorBox.textContent='Image is too large. Please choose a file under 3 MB.'; errorBox.style.display='block';
     imageFile.value=''; return;
   }
   const reader=new FileReader();

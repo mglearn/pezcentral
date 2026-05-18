@@ -169,7 +169,7 @@ Click **Save Settings** to apply. Settings persist in Apps Script Script Propert
 
 ## Image Uploads
 
-Each sticky note can include one image (PNG, JPG, WEBP, or SVG) up to about 1.5 MB. The image:
+Each sticky note can include one image (PNG, JPG, WEBP, or SVG) up to about 3 MB. The image:
 
 - Uploads from `Submit.html` (or via Admin's **Add / Replace image**).
 - Is stored in your Google Drive folder `StickyBoard Images` (auto-created on first upload). The folder ID is saved in Script Properties as `IMAGES_FOLDER_ID`. You can change it to any folder you own.

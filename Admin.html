@@ -90,7 +90,7 @@ textarea{min-height:120px;resize:vertical;font-family:'DM Sans',sans-serif;line-
 </main>
 <script src="config.js"></script>
 <script>
-const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 let passcode='', notes=[];
 const pendingImage = {}; // id -> {dataUrl, mime, name}
 const pendingRemove = {}; // id -> true
@@ -185,7 +185,7 @@ function pickImage(id){
     if(!file) return;
     if(file.size > MAX_IMAGE_BYTES){
       const note=document.getElementById('img-status-'+id);
-      if(note) note.textContent='Image too large. Use under 1.5 MB.';
+      if(note) note.textContent='Image too large. Use under 3 MB.';
       return;
     }
     const reader=new FileReader();
