@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StickyBoard | Add a Sticky Note</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0A3476;--navy-dark:#071f4a;--gold:#FCB040;--pale:#f7f8fc;--line:#dfe6f5;--text:#172033;--muted:#5b6680;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;font-family:'DM Sans',sans-serif;background:var(--pale);color:var(--text);line-height:1.5}
+.hero{background:linear-gradient(135deg,var(--navy-dark),var(--navy));color:white;padding:34px 20px}
+.hero-inner,.wrap{max-width:900px;margin:0 auto}
+.eyebrow{letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-size:12px;font-weight:800;margin:0 0 8px}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(34px,6vw,60px);line-height:1;margin:0 0 10px;font-weight:400}
+h1 em{color:var(--gold);font-style:italic}
+h1 .sub{font-size:.7em;color:#d6def2;font-weight:400}
+.hero p{color:#d6def2;margin:0;font-size:17px}
+.wrap{padding:24px 20px 40px}
+.nav{background:white;border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:-46px;position:relative;z-index:2;box-shadow:0 10px 28px rgba(10,52,118,.12);display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:0;border-radius:999px;background:var(--navy);color:white;text-decoration:none;font-weight:800;padding:10px 16px;font-size:14px;cursor:pointer}
+.btn.secondary{background:var(--gold);color:#151515}
+.btn.ghost{background:#eef2fa;color:var(--navy)}
+.card{background:white;border:1.5px solid var(--line);border-radius:18px;padding:24px;margin-top:18px;box-shadow:0 8px 22px rgba(10,52,118,.06)}
+label{display:block;font-weight:800;color:var(--navy-dark);margin:0 0 7px}
+textarea,input,select{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px;font:inherit;background:#fff}
+textarea{min-height:200px;resize:vertical;font-family:'DM Sans',sans-serif;line-height:1.5}
+.field{margin-bottom:18px}
+.help{font-size:13px;color:var(--muted);margin:6px 0 0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.colors{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.color-option{position:relative}
+.color-option input{position:absolute;opacity:0}
+.swatch{height:48px;border-radius:12px;border:3px solid transparent;display:block;cursor:pointer}
+.color-option input:checked+.swatch{border-color:var(--navy);box-shadow:0 0 0 3px rgba(10,52,118,.14)}
+.yellow{background:#fff3a6}.blue{background:#bfe7ff}.green{background:#c9f4c5}.pink{background:#ffd1dc}.purple{background:#ddd1ff}.orange{background:#ffd39c}
+.notice{border:1.5px solid #f6d28a;background:#fff8e8;border-radius:14px;padding:14px;color:#5b3b00;font-weight:700;margin-bottom:18px}
+.success{border:1.5px solid #bde5c8;background:#effaf2;color:#17592b;border-radius:14px;padding:16px;font-weight:800;display:none}
+.error{border:1.5px solid #f2b8b5;background:#fff0ef;color:#8a1f17;border-radius:14px;padding:16px;font-weight:800;display:none}
+.disclaimer{margin-top:18px;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:20px}
+.disclaimer h2{margin:0 0 8px;color:var(--navy);font-size:20px}
+.disclaimer ul{margin:8px 0 0;padding-left:20px}
+.md-hint{font-size:12px;color:var(--muted);font-weight:700;margin:6px 0 0;line-height:1.5}
+.md-hint code{background:#eef2fa;padding:1px 5px;border-radius:4px;font-family:ui-monospace,Menlo,Consolas,monospace}
+.image-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.image-preview{display:none;max-width:140px;max-height:140px;border-radius:10px;border:1.5px solid var(--line);object-fit:cover;background:#f3f4f6}
+.image-preview.show{display:block}
+.image-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.btn.small{padding:7px 12px;font-size:13px}
+.file-input{display:none}
+.contact-line{margin-top:6px;font-size:13px;color:var(--muted);font-weight:700}
+@media(max-width:680px){.row{grid-template-columns:1fr}.colors{grid-template-columns:repeat(3,1fr)}.nav .btn{width:100%;text-align:center}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="hero-inner"><p class="eyebrow">Share an idea</p><h1 id="heading">Add a Sticky <em>Note</em></h1><p id="heroDescription">Contribute to the shared brainstorming canvas. Names are optional.</p></div></header>
+<main class="wrap">
+  <nav class="nav">
+    <a class="btn secondary" href="index.html">View Board</a>
+    <a class="btn" href="#digital-citizenship">Digital Citizenship</a>
+    <a class="btn ghost" id="rssLink" href="#" target="_blank" rel="noopener">RSS</a>
+    <a class="btn ghost" id="contactLink" href="#" style="display:none">Contact</a>
+    <a class="btn ghost" href="Admin.html">Admin</a>
+  </nav>
+
+  <section class="card">
+    <div id="modeNotice" class="notice">Checking board settings...</div>
+    <form id="noteForm">
+      <div class="field">
+        <label for="note">Sticky Note Text</label>
+        <textarea id="note" name="note" maxlength="2000" required placeholder="Type one idea, question, connection, reflection, or next step..."></textarea>
+        <p class="help"><span id="count">0</span>/2000 characters</p>
+        <p class="md-hint">Markdown supported: <code>**bold**</code>, <code>*italic*</code>, <code>~~strike~~</code>, <code># heading</code>, <code>- list</code>, <code>1. list</code>, <code>&gt; quote</code>, <code>`code`</code>, <code>[text](https://link)</code>. HTML is not allowed.</p>
+      </div>
+      <div class="row">
+        <div class="field"><label for="displayName">Display Name (optional)</label><input id="displayName" name="displayName" maxlength="40" placeholder="Anonymous, Team 2, Table 4, etc."></div>
+        <div class="field"><label for="category">Category (optional)</label><input id="category" name="category" maxlength="40" placeholder="Idea, Question, Wonder, Next Step"></div>
+      </div>
+      <div class="field">
+        <label>Image (optional)</label>
+        <div class="image-row">
+          <img id="imagePreview" class="image-preview" alt="">
+          <div class="image-buttons">
+            <button type="button" class="btn small" id="chooseImage">Choose Image</button>
+            <button type="button" class="btn ghost small" id="clearImage" style="display:none">Remove</button>
+          </div>
+          <input type="file" id="imageFile" class="file-input" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+        </div>
+        <p class="help">PNG, JPG, WEBP, or SVG. Up to about 1.5 MB. Optional, but useful for sketches, photos, or charts.</p>
+      </div>
+      <div class="field"><label>Sticky Note Color</label><div class="colors">
+        <label class="color-option"><input type="radio" name="color" value="yellow" checked><span class="swatch yellow" title="Yellow"></span></label>
+        <label class="color-option"><input type="radio" name="color" value="blue"><span class="swatch blue" title="Blue"></span></label>
+        <label class="color-option"><input type="radio" name="color" value="green"><span class="swatch green" title="Green"></span></label>
+        <label class="color-option"><input type="radio" name="color" value="pink"><span class="swatch pink" title="Pink"></span></label>
+        <label class="color-option"><input type="radio" name="color" value="purple"><span class="swatch purple" title="Purple"></span></label>
+        <label class="color-option"><input type="radio" name="color" value="orange"><span class="swatch orange" title="Orange"></span></label>
+      </div></div>
+      <button class="btn secondary" type="submit" id="submitBtn">Post Sticky Note</button>
+    </form>
+    <div id="success" class="success"></div>
+    <div id="error" class="error"></div>
+  </section>
+
+  <section class="disclaimer" id="digital-citizenship"><h2>Digital Citizenship Reminder</h2><p>StickyBoard is for respectful group thinking. Use it like a classroom wall, not a private chat.</p><ul><li>Post ideas that are useful to the activity.</li><li>Do not include private information, student names, insults, or off-topic comments.</li><li>Use clear, professional language.</li><li>The facilitator may approve, edit, hide, or delete sticky notes.</li></ul></section>
+</main>
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOKvnxrwAwdVd3sNbNuyolBaSCrrUYOJvfPpdPl_v-YiTiyms7F3jU0FlzEQUhG1po/exec';
+const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
+const form=document.getElementById('noteForm'), note=document.getElementById('note'), count=document.getElementById('count'),
+      success=document.getElementById('success'), errorBox=document.getElementById('error'), submitBtn=document.getElementById('submitBtn'),
+      modeNotice=document.getElementById('modeNotice'), heading=document.getElementById('heading'), heroDescription=document.getElementById('heroDescription'),
+      rssLink=document.getElementById('rssLink'), contactLink=document.getElementById('contactLink'),
+      imageFile=document.getElementById('imageFile'), imagePreview=document.getElementById('imagePreview'),
+      chooseImage=document.getElementById('chooseImage'), clearImage=document.getElementById('clearImage');
+let imageDataUrl='';
+function escapeHtml(str){return String(str==null?'':str).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+note.addEventListener('input',()=>count.textContent=note.value.length);
+rssLink.href = SCRIPT_URL + '?action=rss';
+
+chooseImage.addEventListener('click',()=>imageFile.click());
+clearImage.addEventListener('click',()=>{
+  imageFile.value=''; imageDataUrl=''; imagePreview.src=''; imagePreview.classList.remove('show'); clearImage.style.display='none';
+});
+imageFile.addEventListener('change',()=>{
+  const file=imageFile.files && imageFile.files[0];
+  if(!file) return;
+  if(file.size > MAX_IMAGE_BYTES){
+    errorBox.textContent='Image is too large. Please choose a file under 1.5 MB.'; errorBox.style.display='block';
+    imageFile.value=''; return;
+  }
+  const reader=new FileReader();
+  reader.onload=()=>{
+    imageDataUrl=String(reader.result||'');
+    imagePreview.src=imageDataUrl; imagePreview.classList.add('show');
+    clearImage.style.display='inline-block';
+    errorBox.style.display='none';
+  };
+  reader.onerror=()=>{ errorBox.textContent='Could not read this image.'; errorBox.style.display='block'; };
+  reader.readAsDataURL(file);
+});
+
+async function loadSettings(){
+  if(SCRIPT_URL.indexOf('PASTE_YOUR')===0){modeNotice.textContent='Backend not configured. Paste your Apps Script Web App URL into SCRIPT_URL in Submit.html.';return;}
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=settings&_='+Date.now());
+    const data=await res.json();
+    if(!data.ok) throw new Error(data.error||'Could not read settings.');
+    modeNotice.textContent=data.moderationEnabled?'Moderation is ON. Your note will appear after facilitator approval.':'Moderation is OFF. Your note will appear on the board after posting.';
+    if(data.boardTitle){
+      heading.innerHTML='Add a Sticky <em>Note</em> <span class="sub">&mdash; '+escapeHtml(data.boardTitle)+'</span>';
+      document.title='StickyBoard - '+data.boardTitle+' | Add a Sticky Note';
+    }
+    if(data.boardDescription) heroDescription.textContent=data.boardDescription;
+    if(data.contactEmail){
+      contactLink.href='mailto:'+encodeURIComponent(data.contactEmail);
+      contactLink.textContent='Contact';
+      contactLink.style.display='';
+    }
+  }catch(err){modeNotice.textContent=err.message;}
+}
+
+form.addEventListener('submit',async e=>{
+  e.preventDefault(); success.style.display='none'; errorBox.style.display='none';
+  if(SCRIPT_URL.indexOf('PASTE_YOUR')===0){errorBox.textContent='Backend not configured.';errorBox.style.display='block';return;}
+  submitBtn.disabled=true; submitBtn.textContent='Posting...';
+  try{
+    const data=new FormData(form); data.append('action','submit');
+    if(imageDataUrl){
+      const file=imageFile.files && imageFile.files[0];
+      data.append('imageData', imageDataUrl);
+      if(file){
+        data.append('imageMimeType', file.type || '');
+        data.append('imageFilename', file.name || '');
+      }
+    }
+    const res=await fetch(SCRIPT_URL,{method:'POST',body:new URLSearchParams(data)});
+    const json=await res.json();
+    if(!json.ok) throw new Error(json.error||'Could not submit note.');
+    form.reset(); count.textContent='0';
+    imageDataUrl=''; imagePreview.src=''; imagePreview.classList.remove('show'); clearImage.style.display='none';
+    success.textContent=json.status==='approved'?'Posted. Your sticky note is now visible on the board.':'Submitted. Your sticky note is waiting for facilitator approval.';
+    success.style.display='block';
+  }catch(err){errorBox.textContent=err.message;errorBox.style.display='block';}
+  finally{submitBtn.disabled=false; submitBtn.textContent='Post Sticky Note';}
+});
+loadSettings();
+</script>
+</body>
+</html>

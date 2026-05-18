@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StickyBoard | Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0A3476;--navy-dark:#071f4a;--gold:#FCB040;--pale:#f7f8fc;--line:#dfe6f5;--text:#172033;--muted:#5b6680;--white:#fff;--red:#b3261e;--green:#1f7a3a}
+*{box-sizing:border-box}
+body{margin:0;font-family:'DM Sans',sans-serif;background:var(--pale);color:var(--text);line-height:1.5}
+.hero{background:linear-gradient(135deg,var(--navy-dark),var(--navy));color:white;padding:30px 20px}
+.hero-inner,.wrap{max-width:1100px;margin:0 auto}
+.eyebrow{letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-size:12px;font-weight:800;margin:0 0 8px}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(34px,6vw,58px);line-height:1;margin:0 0 10px;font-weight:400}
+h1 em{color:var(--gold);font-style:italic}
+.hero p{color:#d6def2;margin:0;font-size:17px}
+.wrap{padding:24px 20px 40px}
+.nav,.panel,.note-card{background:white;border:1.5px solid var(--line);border-radius:16px;box-shadow:0 8px 22px rgba(10,52,118,.06)}
+.nav{padding:14px;margin-top:-46px;position:relative;z-index:2;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:0;border-radius:999px;background:var(--navy);color:white;text-decoration:none;font-weight:800;padding:10px 16px;font-size:14px;cursor:pointer}
+.btn.secondary{background:var(--gold);color:#151515}
+.btn.ghost{background:#eef2fa;color:var(--navy)}
+.btn.red{background:var(--red)}
+.btn.green{background:var(--green)}
+.btn.small{padding:7px 12px;font-size:13px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.panel{padding:18px;margin-top:18px}
+.panel h3{margin:0 0 12px;color:var(--navy);font-size:16px;text-transform:uppercase;letter-spacing:.06em;font-weight:900}
+label{display:block;font-weight:800;color:var(--navy-dark);margin:0 0 7px}
+input,textarea,select{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px;font:inherit;background:#fff}
+textarea{min-height:120px;resize:vertical;font-family:'DM Sans',sans-serif;line-height:1.5}
+.login{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
+.status{font-size:13px;color:var(--muted);font-weight:800;margin-left:auto}
+.settings-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.settings-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.toggle{display:flex;align-items:center;gap:10px;font-weight:900}
+.toggle input{width:auto;transform:scale(1.25)}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.filters input,.filters select{min-width:190px;flex:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.note-card{padding:16px;border-top-width:8px}
+.note-card.yellow{border-top-color:#fff3a6}.note-card.blue{border-top-color:#bfe7ff}.note-card.green{border-top-color:#c9f4c5}.note-card.pink{border-top-color:#ffd1dc}.note-card.purple{border-top-color:#ddd1ff}.note-card.orange{border-top-color:#ffd39c}
+.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--muted);font-size:12px;font-weight:800;margin-bottom:10px}
+.pill{display:inline-flex;border-radius:999px;padding:4px 9px;font-weight:900;font-size:12px}
+.pending{background:#fff8e8;color:#7a4a00}
+.approved{background:#effaf2;color:#17592b}
+.hidden{background:#fff0ef;color:#8a1f17}
+.fields{display:grid;gap:10px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.image-block{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.thumb{max-width:90px;max-height:90px;border-radius:8px;border:1.5px solid var(--line);background:#f3f4f6;object-fit:cover}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.empty{background:white;border:1.5px dashed var(--line);border-radius:16px;padding:28px;text-align:center;color:var(--muted)}
+.message{display:none;margin-top:12px;border-radius:12px;padding:12px;font-weight:800}
+.message.ok{border:1px solid #bde5c8;background:#effaf2;color:#17592b}
+.message.err{border:1px solid #f2b8b5;background:#fff0ef;color:#8a1f17}
+.help{font-size:12px;color:var(--muted);font-weight:700;margin:6px 0 0}
+@media(max-width:700px){.login,.row,.settings-row{grid-template-columns:1fr}.nav .btn{width:100%;text-align:center}.status{margin-left:0}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="hero-inner"><p class="eyebrow">Facilitator controls</p><h1>StickyBoard <em>Admin</em></h1><p>Approve, hide, edit, delete, and configure the board's title, description, contact email, and moderation.</p></div></header>
+<main class="wrap">
+  <nav class="nav"><a class="btn secondary" href="index.html">View Board</a><a class="btn ghost" href="Submit.html">Submit</a><span class="status" id="statusText">Not connected</span></nav>
+
+  <section class="panel" id="loginPanel">
+    <div class="login"><div><label for="passcode">Admin Passcode</label><input id="passcode" type="password" placeholder="Enter passcode from Script Properties"></div><button class="btn secondary" id="loginBtn">Open Admin</button></div>
+    <div class="message err" id="loginError"></div>
+  </section>
+
+  <section class="panel" id="adminPanel" style="display:none">
+    <h3>Board Settings</h3>
+    <div class="settings-row">
+      <div><label for="boardTitle">Board Title</label><input id="boardTitle" maxlength="80" placeholder="e.g., Pez Center"><p class="help">Shown beside the StickyBoard logo, like "StickyBoard - Pez Center".</p></div>
+      <div><label for="contactEmail">Contact Email</label><input id="contactEmail" type="email" maxlength="120" placeholder="facilitator@example.com"><p class="help">Optional. Shown as a Contact link on the board and submit pages.</p></div>
+    </div>
+    <div class="field"><label for="boardDescription">Board Description</label><textarea id="boardDescription" maxlength="400" placeholder="Replaces the default subtitle on the public board."></textarea><p class="help">Replaces the default "Post ideas, sort patterns..." text. Up to 400 characters.</p></div>
+    <div class="settings-actions">
+      <label class="toggle"><input type="checkbox" id="moderationToggle"> Moderation required for new notes</label>
+      <button class="btn" id="saveSettingsBtn">Save Settings</button>
+      <button class="btn ghost" id="refreshBtn">Refresh Notes</button>
+      <a class="btn ghost" id="rssLink" href="#" target="_blank" rel="noopener">RSS Feed</a>
+    </div>
+    <div class="message ok" id="okMsg"></div><div class="message err" id="errMsg"></div>
+    <div class="filters"><input id="searchInput" type="search" placeholder="Search notes"><select id="statusFilter"><option value="all">All statuses</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="hidden">Hidden</option></select></div>
+    <section id="notesGrid" class="grid"></section>
+  </section>
+</main>
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzOKvnxrwAwdVd3sNbNuyolBaSCrrUYOJvfPpdPl_v-YiTiyms7F3jU0FlzEQUhG1po/exec';
+const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
+let passcode='', notes=[];
+const pendingImage = {}; // id -> {dataUrl, mime, name}
+const pendingRemove = {}; // id -> true
+const loginPanel=document.getElementById('loginPanel'), adminPanel=document.getElementById('adminPanel'), passInput=document.getElementById('passcode'),
+      statusText=document.getElementById('statusText'), grid=document.getElementById('notesGrid'), moderationToggle=document.getElementById('moderationToggle'),
+      okMsg=document.getElementById('okMsg'), errMsg=document.getElementById('errMsg'), loginError=document.getElementById('loginError'),
+      searchInput=document.getElementById('searchInput'), statusFilter=document.getElementById('statusFilter'),
+      boardTitle=document.getElementById('boardTitle'), boardDescription=document.getElementById('boardDescription'), contactEmail=document.getElementById('contactEmail'),
+      rssLink=document.getElementById('rssLink');
+function escapeHtml(str){return String(str==null?'':str).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function show(el,msg){el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',3500)}
+function timeLabel(value){const d=new Date(value); if(isNaN(d)) return ''; return d.toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});}
+rssLink.href = SCRIPT_URL + '?action=rss';
+
+async function adminPost(params){
+  if(SCRIPT_URL.indexOf('PASTE_YOUR')===0) throw new Error('Backend not configured. Paste your Apps Script Web App URL into SCRIPT_URL in Admin.html.');
+  params.passcode=passcode;
+  const body=new URLSearchParams(params);
+  const res=await fetch(SCRIPT_URL,{method:'POST',body});
+  const data=await res.json();
+  if(!data.ok) throw new Error(data.error||'Request failed.');
+  return data;
+}
+async function loadAdmin(){
+  try{
+    const data=await adminPost({action:'adminList'});
+    notes=data.notes||[];
+    moderationToggle.checked=!!data.moderationEnabled;
+    boardTitle.value=data.boardTitle||'';
+    boardDescription.value=data.boardDescription||'';
+    contactEmail.value=data.contactEmail||'';
+    statusText.textContent=(notes.length===1?'1 note':notes.length+' notes')+' • '+(data.moderationEnabled?'Moderated':'Open posting');
+    loginPanel.style.display='none';adminPanel.style.display='block';
+    render();
+  }
+  catch(err){show(loginError,err.message);statusText.textContent='Connection issue';}
+}
+function render(){
+  const term=searchInput.value.trim().toLowerCase(), stat=statusFilter.value;
+  let list=notes.filter(n=>{const hay=[n.note,n.displayName,n.category,n.color,n.status].join(' ').toLowerCase();return(!term||hay.includes(term))&&(stat==='all'||n.status===stat);});
+  if(!list.length){grid.innerHTML='<div class="empty">No notes match this view.</div>';return;}
+  grid.innerHTML=list.map(n=>{
+    const id=escapeHtml(n.id);
+    const imageBlock = n.imageUrl
+      ? `<div class="image-block"><img class="thumb" src="${escapeHtml(n.imageUrl)}" alt=""><div><button type="button" class="btn ghost small" data-action="replace-image" data-id="${id}">Replace image</button> <button type="button" class="btn red small" data-action="remove-image" data-id="${id}">Remove image</button><p class="help" id="img-status-${id}"></p></div></div>`
+      : `<div class="image-block"><button type="button" class="btn ghost small" data-action="replace-image" data-id="${id}">Add image</button><p class="help" id="img-status-${id}"></p></div>`;
+    return `<article class="note-card ${escapeHtml(n.color||'yellow')}">
+    <div class="meta"><span class="pill ${escapeHtml(n.status)}">${escapeHtml(n.status)}</span><span>${escapeHtml(n.category||'General')}</span><span>${escapeHtml(n.displayName||'Anonymous')}</span><span>${escapeHtml(timeLabel(n.timestamp))}</span><span>&heartsuit; ${Number(n.likeCount||0)}</span></div>
+    <div class="fields">
+      <label>Note (Markdown, up to 2000 chars)<textarea maxlength="2000" data-field="note" data-id="${id}">${escapeHtml(n.note)}</textarea></label>
+      <div class="row"><label>Name<input data-field="displayName" data-id="${id}" maxlength="40" value="${escapeHtml(n.displayName||'')}"></label><label>Category<input data-field="category" data-id="${id}" maxlength="40" value="${escapeHtml(n.category||'General')}"></label></div>
+      <div class="row"><label>Color<select data-field="color" data-id="${id}">${['yellow','blue','green','pink','purple','orange'].map(c=>`<option value="${c}" ${n.color===c?'selected':''}>${c}</option>`).join('')}</select></label><label>Admin Note<input data-field="adminNote" data-id="${id}" value="${escapeHtml(n.adminNote||'')}"></label></div>
+      <label>Image${imageBlock}</label>
+    </div>
+    <div class="actions"><button class="btn green" data-action="approve" data-id="${id}">Approve</button><button class="btn" data-action="save" data-id="${id}">Save Edits</button><button class="btn ghost" data-action="hide" data-id="${id}">Hide</button><button class="btn ghost" data-action="restore" data-id="${id}">Restore to Pending</button><button class="btn red" data-action="delete" data-id="${id}">Delete</button></div>
+  </article>`;}).join('');
+  grid.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',handleAction));
+}
+
+function handleAction(e){
+  const id=e.currentTarget.dataset.id;
+  const action=e.currentTarget.dataset.action;
+  if(action==='approve') return setStatus(id,'approve');
+  if(action==='hide') return setStatus(id,'hide');
+  if(action==='restore') return setStatus(id,'restore');
+  if(action==='delete') return deleteNote(id);
+  if(action==='save') return saveNote(id);
+  if(action==='replace-image') return pickImage(id);
+  if(action==='remove-image') return markImageRemoved(id);
+}
+
+function pickImage(id){
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='image/png,image/jpeg,image/webp,image/svg+xml';
+  input.onchange=()=>{
+    const file=input.files && input.files[0];
+    if(!file) return;
+    if(file.size > MAX_IMAGE_BYTES){
+      const note=document.getElementById('img-status-'+id);
+      if(note) note.textContent='Image too large. Use under 1.5 MB.';
+      return;
+    }
+    const reader=new FileReader();
+    reader.onload=()=>{
+      pendingImage[id]={dataUrl:String(reader.result||''),mime:file.type||'',name:file.name||''};
+      delete pendingRemove[id];
+      const note=document.getElementById('img-status-'+id);
+      if(note) note.textContent='New image selected. Click "Save Edits" to upload.';
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+function markImageRemoved(id){
+  pendingRemove[id]=true;
+  delete pendingImage[id];
+  const note=document.getElementById('img-status-'+id);
+  if(note) note.textContent='Image will be removed when you click "Save Edits".';
+}
+
+async function setStatus(id,action){try{await adminPost({action,id});show(okMsg,'Updated.');await loadAdmin();}catch(err){show(errMsg,err.message)}}
+async function saveNote(id){
+  const fields={action:'update',id};
+  document.querySelectorAll(`[data-id="${CSS.escape(id)}"]`).forEach(el=>{ if(el.dataset.field) fields[el.dataset.field]=el.value; });
+  if(pendingImage[id]){
+    fields.imageData = pendingImage[id].dataUrl;
+    fields.imageMimeType = pendingImage[id].mime;
+    fields.imageFilename = pendingImage[id].name;
+  }
+  if(pendingRemove[id]) fields.removeImage='true';
+  try{
+    await adminPost(fields);
+    delete pendingImage[id]; delete pendingRemove[id];
+    show(okMsg,'Saved edits.');
+    await loadAdmin();
+  }catch(err){show(errMsg,err.message)}
+}
+async function deleteNote(id){if(!confirm('Delete this sticky note? This cannot be undone.'))return;try{await adminPost({action:'delete',id});show(okMsg,'Deleted.');await loadAdmin();}catch(err){show(errMsg,err.message)}}
+
+document.getElementById('loginBtn').addEventListener('click',()=>{passcode=passInput.value.trim();loadAdmin();});
+passInput.addEventListener('keydown',e=>{if(e.key==='Enter'){passcode=passInput.value.trim();loadAdmin();}});
+document.getElementById('refreshBtn').addEventListener('click',loadAdmin);
+document.getElementById('saveSettingsBtn').addEventListener('click',async()=>{
+  try{
+    const data=await adminPost({
+      action:'settings',
+      moderationEnabled:String(moderationToggle.checked),
+      boardTitle:boardTitle.value,
+      boardDescription:boardDescription.value,
+      contactEmail:contactEmail.value
+    });
+    show(okMsg,'Settings saved.');
+    await loadAdmin();
+  }catch(err){show(errMsg,err.message)}
+});
+searchInput.addEventListener('input',render);statusFilter.addEventListener('change',render);
+</script>
+</body>
+</html>

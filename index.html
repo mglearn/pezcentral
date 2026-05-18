@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StickyBoard | Collaborative Sticky-Note Canvas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0A3476;--navy-dark:#071f4a;--gold:#FCB040;--pale:#f7f8fc;--line:#dfe6f5;--text:#172033;--muted:#5b6680;--white:#fff;--shadow:0 14px 30px rgba(7,31,74,.15)}
+*{box-sizing:border-box}
+body{margin:0;font-family:'DM Sans',sans-serif;background:var(--pale);color:var(--text);line-height:1.5}
+.hero{background:linear-gradient(135deg,var(--navy-dark),var(--navy));color:var(--white);padding:34px 20px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-90px;top:-90px;width:280px;height:280px;background:radial-gradient(circle,var(--gold),transparent 70%);opacity:.23}
+.hero-inner{max-width:1200px;margin:0 auto;position:relative;z-index:1}
+.eyebrow{letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-size:12px;font-weight:800;margin:0 0 8px}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(36px,6vw,64px);line-height:1;margin:0 0 10px;font-weight:400}
+h1 em{color:var(--gold);font-style:italic}
+h1 .sub{font-size:.7em;color:#d6def2;font-style:normal;font-weight:400}
+.hero p{max-width:780px;color:#d6def2;margin:0;font-size:17px}
+.topbar{max-width:1200px;margin:-22px auto 18px;padding:0 20px;position:relative;z-index:2}
+.navcard{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 10px 28px rgba(10,52,118,.12)}
+.links{display:flex;flex-wrap:wrap;gap:10px}
+.btn{border:0;border-radius:999px;background:var(--navy);color:white;text-decoration:none;font-weight:800;padding:10px 16px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn.secondary{background:var(--gold);color:#151515}
+.btn.ghost{background:#eef2fa;color:var(--navy)}
+.status{font-size:13px;color:var(--muted);font-weight:700}
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px 38px}
+.toolbar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input,.toolbar select{border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;font:inherit;background:#fff;min-width:210px}
+.toolbar input{flex:1}
+.canvas-wrap{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 8px 22px rgba(10,52,118,.06)}
+.canvas{position:relative;min-height:620px;border-radius:14px;overflow:hidden;background:linear-gradient(90deg,rgba(10,52,118,.06) 1px,transparent 1px),linear-gradient(rgba(10,52,118,.06) 1px,transparent 1px),#fbfcff;background-size:36px 36px}
+.note{position:absolute;width:200px;min-height:160px;padding:14px 13px 12px;border-radius:6px 6px 18px 6px;box-shadow:var(--shadow);cursor:grab;user-select:none;transform:rotate(var(--tilt));transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column}
+.note:active{cursor:grabbing;box-shadow:0 20px 36px rgba(7,31,74,.24);z-index:10;transform:rotate(0deg) scale(1.02)}
+.note:after{content:"";position:absolute;right:0;bottom:0;border-width:0 0 28px 28px;border-style:solid;border-color:transparent transparent rgba(0,0,0,.11) transparent}
+.note.yellow{background:#fff3a6}
+.note.blue{background:#bfe7ff}
+.note.green{background:#c9f4c5}
+.note.pink{background:#ffd1dc}
+.note.purple{background:#ddd1ff}
+.note.orange{background:#ffd39c}
+.note .thumb{display:block;width:100%;height:80px;border-radius:4px;background:rgba(0,0,0,.05);object-fit:cover;margin-bottom:8px}
+.note-text{font-weight:700;font-size:15px;color:#1f2937;margin:0 0 10px;line-height:1.3;overflow-wrap:anywhere;white-space:pre-wrap}
+.note-meta{font-size:12px;color:rgba(31,41,55,.7);font-weight:800;border-top:1px solid rgba(0,0,0,.12);padding-top:8px;margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.like-btn{background:rgba(255,255,255,.55);border:0;border-radius:999px;padding:3px 10px;font:inherit;font-weight:800;font-size:12px;cursor:pointer;color:#7a1c2b;display:inline-flex;align-items:center;gap:5px;line-height:1;touch-action:manipulation;user-select:none}
+.like-btn:hover{background:rgba(255,255,255,.85)}
+.like-btn.liked{background:#ffe1e6;color:#b91c2b}
+.like-btn .heart{font-size:14px;line-height:1}
+.like-btn.liked .heart{filter:none}
+.like-btn:disabled{opacity:.55;cursor:wait}
+.category{display:inline-block;margin-bottom:7px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.55);font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;align-self:flex-start}
+.expand-hint{font-size:11px;color:rgba(31,41,55,.5);font-weight:700;margin:0 0 6px}
+.empty{position:absolute;inset:24px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);border:1.5px dashed var(--line);border-radius:14px;background:rgba(255,255,255,.72);padding:24px}
+.disclaimer{margin-top:20px;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:20px}
+.disclaimer h2{margin:0 0 8px;color:var(--navy);font-size:20px}
+.disclaimer ul{margin:8px 0 0;padding-left:20px}
+.footer{max-width:1200px;margin:0 auto;padding:8px 20px 30px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
+a{color:var(--navy);font-weight:800}
+.modal-backdrop{position:fixed;inset:0;background:rgba(7,31,74,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:100;overflow-y:auto}
+.modal-backdrop.show{display:flex}
+.modal{background:#fff;border-radius:18px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(7,31,74,.35);border-top:10px solid var(--gold)}
+.modal.yellow{border-top-color:#fff3a6}
+.modal.blue{border-top-color:#bfe7ff}
+.modal.green{border-top-color:#c9f4c5}
+.modal.pink{border-top-color:#ffd1dc}
+.modal.purple{border-top-color:#ddd1ff}
+.modal.orange{border-top-color:#ffd39c}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 0;gap:10px;flex-wrap:wrap}
+.modal-head .category{margin:0}
+.close-btn{background:none;border:0;font-size:24px;line-height:1;cursor:pointer;color:var(--muted);padding:4px 10px;border-radius:8px}
+.close-btn:hover{background:#eef2fa;color:var(--navy)}
+.modal-body{padding:14px 24px 20px}
+.modal-image{display:block;max-width:100%;height:auto;border-radius:10px;margin:0 0 16px;background:#f3f4f6}
+.md{color:#1f2937;font-size:16px;line-height:1.55;overflow-wrap:anywhere}
+.md h1,.md h2,.md h3{font-family:'DM Serif Display',serif;color:var(--navy);margin:0.6em 0 .3em;font-weight:400}
+.md h1{font-size:1.6em}.md h2{font-size:1.35em}.md h3{font-size:1.15em}
+.md p{margin:.5em 0}
+.md ul,.md ol{margin:.4em 0 .6em 1.4em;padding:0}
+.md li{margin:.2em 0}
+.md blockquote{border-left:3px solid var(--gold);padding:.2em .8em;margin:.6em 0;color:#3a4258;background:#fff8e8;border-radius:0 8px 8px 0}
+.md code{background:#eef2fa;padding:.05em .35em;border-radius:5px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95em}
+.md pre{background:#0f1a30;color:#e6ecf8;padding:12px 14px;border-radius:10px;overflow-x:auto}
+.md pre code{background:transparent;color:inherit;padding:0}
+.md a{word-break:break-word}
+.md hr{border:0;border-top:1px solid var(--line);margin:1em 0}
+.modal-meta{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.modal .like-btn{background:#eef2fa;color:#b91c2b;font-size:14px;padding:6px 14px}
+.modal .like-btn.liked{background:#ffe1e6}
+@media(max-width:640px){
+  .links,.btn{width:100%;justify-content:center}
+  .toolbar input,.toolbar select{width:100%;min-width:0}
+  .canvas{min-height:760px}
+  .note{width:170px;min-height:140px}
+  .note-text{font-size:14px}
+}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">Collaborative sticky-note canvas</p>
+    <h1 id="boardHeading">Sticky<em>Board</em></h1>
+    <p id="boardDescription">Post ideas, sort patterns, and move notes around a shared canvas for brainstorming, exit tickets, group work, and staff PD.</p>
+  </div>
+</header>
+
+<section class="topbar">
+  <div class="navcard">
+    <div class="links">
+      <a class="btn secondary" href="Submit.html">Add a Sticky Note</a>
+      <a class="btn ghost" href="#digital-citizenship">Digital Citizenship</a>
+      <a class="btn ghost" id="rssLink" href="#" target="_blank" rel="noopener">RSS</a>
+      <a class="btn ghost" id="contactLink" href="#" style="display:none">Contact</a>
+      <a class="btn ghost" href="Admin.html">Admin</a>
+    </div>
+    <div class="status" id="statusText">Loading board...</div>
+  </div>
+</section>
+
+<main class="wrap">
+  <div class="toolbar">
+    <input id="searchInput" type="search" placeholder="Search sticky notes">
+    <select id="categoryFilter" aria-label="Filter by category"><option value="all">All categories</option></select>
+    <select id="sortSelect" aria-label="Sort notes"><option value="position">Canvas position</option><option value="newest">Newest first</option><option value="color">Group by color</option></select>
+  </div>
+
+  <section class="canvas-wrap">
+    <div id="canvas" class="canvas" aria-live="polite"></div>
+  </section>
+
+  <section class="disclaimer" id="digital-citizenship">
+    <h2>Digital Citizenship Reminder</h2>
+    <p>StickyBoard is a learning space. Even when names are optional, every note should be appropriate for a classroom, workshop, or staff meeting.</p>
+    <ul>
+      <li>Share ideas that help the group think, plan, solve, or reflect.</li>
+      <li>Do not include private information, student names, jokes at someone&rsquo;s expense, or harmful language.</li>
+      <li>Use a professional tone and follow campus, district, and workshop expectations.</li>
+      <li>If moderation is on, notes appear only after approval. If moderation is off, the facilitator may still hide or delete notes.</li>
+    </ul>
+  </section>
+</main>
+
+<footer class="footer">
+  <span>StickyBoard is a free, self-hosted Jamboard-style sticky-note canvas for classrooms, workshops, and staff PD.</span>
+  <span id="footerContact"></span>
+</footer>
+
+<div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal" id="modalCard">
+    <div class="modal-head">
+      <span class="category" id="modalCategory">General</span>
+      <button class="close-btn" id="modalClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <img id="modalImage" class="modal-image" alt="" style="display:none">
+      <div class="md" id="modalBody"></div>
+      <div class="modal-meta">
+        <span id="modalMeta"></span>
+        <span id="modalLike"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOKvnxrwAwdVd3sNbNuyolBaSCrrUYOJvfPpdPl_v-YiTiyms7F3jU0FlzEQUhG1po/exec';
+const REFRESH_SECONDS = 20;
+const DRAG_THRESHOLD = 6;
+let notes = [];
+let drag = null;
+let settings = { boardTitle: '', boardDescription: '', contactEmail: '', moderationEnabled: true };
+
+const CLIENT_ID_KEY = 'stickyboard.clientId';
+function getClientId(){
+  try{
+    let id = localStorage.getItem(CLIENT_ID_KEY);
+    if(!id){
+      id = 'c-' + Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,10);
+      localStorage.setItem(CLIENT_ID_KEY, id);
+    }
+    return id;
+  }catch(err){
+    return 'anon';
+  }
+}
+const CLIENT_ID = getClientId();
+const pendingLikes = new Set();
+const canvas = document.getElementById('canvas');
+const statusText = document.getElementById('statusText');
+const searchInput = document.getElementById('searchInput');
+const categoryFilter = document.getElementById('categoryFilter');
+const sortSelect = document.getElementById('sortSelect');
+const boardHeading = document.getElementById('boardHeading');
+const boardDescription = document.getElementById('boardDescription');
+const contactLink = document.getElementById('contactLink');
+const footerContact = document.getElementById('footerContact');
+const rssLink = document.getElementById('rssLink');
+const modal = document.getElementById('modal');
+const modalCard = document.getElementById('modalCard');
+const modalCategory = document.getElementById('modalCategory');
+const modalImage = document.getElementById('modalImage');
+const modalBody = document.getElementById('modalBody');
+const modalMeta = document.getElementById('modalMeta');
+const modalLike = document.getElementById('modalLike');
+const modalClose = document.getElementById('modalClose');
+
+function escapeHtml(str){return String(str==null?'':str).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function timeLabel(value){const d=new Date(value); if(isNaN(d)) return ''; return d.toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});}
+function tilt(id){let total=0; for(const ch of String(id||'')) total+=ch.charCodeAt(0); return ((total%9)-4)+'deg';}
+function stripMarkdown(src){
+  return String(src||'')
+    .replace(/```[\s\S]*?```/g,' ')
+    .replace(/`[^`]*`/g,' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g,' ')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g,'$1')
+    .replace(/[*_~#>]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function excerpt(src,limit){
+  const flat=stripMarkdown(src);
+  return flat.length>limit?flat.slice(0,limit-1).trim()+'…':flat;
+}
+function renderMarkdown(src){
+  let s = escapeHtml(src||'');
+  const codeBlocks=[];
+  s = s.replace(/```([\s\S]*?)```/g,(_,c)=>{codeBlocks.push(c);return ' CB'+(codeBlocks.length-1)+' ';});
+  const inlineCodes=[];
+  s = s.replace(/`([^`\n]+)`/g,(_,c)=>{inlineCodes.push(c);return ' IC'+(inlineCodes.length-1)+' ';});
+  s = s.replace(/^###\s+(.+)$/gm,'<h3>$1</h3>')
+       .replace(/^##\s+(.+)$/gm,'<h2>$1</h2>')
+       .replace(/^#\s+(.+)$/gm,'<h1>$1</h1>');
+  s = s.replace(/^\s*&gt;\s+(.+)$/gm,'<blockquote>$1</blockquote>');
+  s = s.replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>')
+       .replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<em>$2</em>')
+       .replace(/(^|[^_])_([^_\n]+)_(?!\w)/g,'$1<em>$2</em>')
+       .replace(/~~([^~\n]+)~~/g,'<del>$1</del>');
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,(_,t,u)=>'<a href="'+u.replace(/"/g,'&quot;')+'" target="_blank" rel="noopener noreferrer">'+t+'</a>');
+  s = s.replace(/(?:^|\n)((?:- [^\n]+\n?)+)/g,(m,block)=>'\n<ul>'+block.trim().split('\n').map(l=>'<li>'+l.replace(/^- /,'')+'</li>').join('')+'</ul>');
+  s = s.replace(/(?:^|\n)((?:\d+\. [^\n]+\n?)+)/g,(m,block)=>'\n<ol>'+block.trim().split('\n').map(l=>'<li>'+l.replace(/^\d+\. /,'')+'</li>').join('')+'</ol>');
+  s = s.split(/\n{2,}/).map(p=>{
+    const t=p.trim();
+    if(!t) return '';
+    if(/^<(h\d|ul|ol|blockquote|pre|hr)/.test(t)) return t;
+    return '<p>'+t.replace(/\n/g,'<br>')+'</p>';
+  }).join('\n');
+  s = s.replace(/ IC(\d+) /g,(_,i)=>'<code>'+inlineCodes[+i]+'</code>');
+  s = s.replace(/ CB(\d+) /g,(_,i)=>'<pre><code>'+codeBlocks[+i]+'</code></pre>');
+  return s;
+}
+
+function applySettings(s){
+  settings = Object.assign(settings, s||{});
+  const title = settings.boardTitle ? ' <span class="sub">&mdash; '+escapeHtml(settings.boardTitle)+'</span>' : '';
+  boardHeading.innerHTML = 'Sticky<em>Board</em>'+title;
+  document.title = (settings.boardTitle ? 'StickyBoard - '+settings.boardTitle : 'StickyBoard')+' | Collaborative Sticky-Note Canvas';
+  if(settings.boardDescription) boardDescription.textContent = settings.boardDescription;
+  if(settings.contactEmail){
+    const email = settings.contactEmail;
+    contactLink.href = 'mailto:'+encodeURIComponent(email);
+    contactLink.textContent = 'Contact';
+    contactLink.style.display = '';
+    footerContact.innerHTML = 'Contact: <a href="mailto:'+escapeHtml(email)+'">'+escapeHtml(email)+'</a>';
+  }else{
+    contactLink.style.display='none';
+    footerContact.textContent='';
+  }
+  rssLink.href = SCRIPT_URL + '?action=rss';
+}
+
+async function apiGet(){
+  if(SCRIPT_URL.indexOf('PASTE_YOUR')===0){statusText.textContent='Backend not configured';canvas.innerHTML='<div class="empty">Paste your Apps Script Web App URL into SCRIPT_URL in index.html.</div>';return;}
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=list&clientId='+encodeURIComponent(CLIENT_ID)+'&_='+Date.now());
+    const data=await res.json();
+    if(!data.ok) throw new Error(data.error||'Could not load notes.');
+    notes=data.notes||[];
+    applySettings(data);
+    statusText.textContent=(notes.length===1?'1 visible note':notes.length+' visible notes')+(data.moderationEnabled?' • Moderated':' • Open posting');
+    updateCategories();
+    render();
+  }catch(err){statusText.textContent='Connection issue';canvas.innerHTML='<div class="empty">'+escapeHtml(err.message)+'</div>';}
+}
+
+function updateCategories(){
+  const current=categoryFilter.value;
+  const cats=[...new Set(notes.map(n=>n.category||'General'))].sort();
+  categoryFilter.innerHTML='<option value="all">All categories</option>'+cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  if(cats.includes(current)) categoryFilter.value=current;
+}
+
+function filteredNotes(){
+  const term=searchInput.value.trim().toLowerCase();
+  const cat=categoryFilter.value;
+  let list=notes.filter(n=>{
+    const hay=[n.note,n.displayName,n.category,n.color].join(' ').toLowerCase();
+    return (!term || hay.includes(term)) && (cat==='all' || n.category===cat);
+  });
+
+  if(sortSelect.value==='position'){
+    list.sort((a,b)=>(Number(a.y||0)-Number(b.y||0)) || (Number(a.x||0)-Number(b.x||0)));
+  }
+  if(sortSelect.value==='newest'){
+    list.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  }
+  if(sortSelect.value==='color'){
+    const colorOrder=['yellow','blue','green','pink','purple','orange'];
+    list.sort((a,b)=>{
+      const colorCompare=colorOrder.indexOf(a.color)-colorOrder.indexOf(b.color);
+      return colorCompare || new Date(b.timestamp)-new Date(a.timestamp);
+    });
+  }
+  return list;
+}
+
+function layoutSettings(count){
+  const rect=canvas.getBoundingClientRect();
+  const noteWidth=window.innerWidth<=640?170:200;
+  const noteHeight=190;
+  const gap=18;
+  const columns=Math.max(1,Math.floor((rect.width-gap)/(noteWidth+gap)));
+  const rows=Math.max(1,Math.ceil(count/columns));
+  const baseHeight=window.innerWidth<=640?760:620;
+  return {rect,noteWidth,noteHeight,gap,columns,rows,baseHeight};
+}
+
+function arrangedPosition(n,index,layout){
+  if(sortSelect.value==='position'){
+    return {x:Number(n.x||10),y:Number(n.y||10)};
+  }
+  const col=index%layout.columns;
+  const row=Math.floor(index/layout.columns);
+  const xPx=layout.gap+col*(layout.noteWidth+layout.gap);
+  const yPx=layout.gap+row*(layout.noteHeight+layout.gap);
+  const rect=canvas.getBoundingClientRect();
+  const x=(xPx/Math.max(rect.width,1))*100;
+  const y=(yPx/Math.max(rect.height,1))*100;
+  return {x:x.toFixed(2),y:y.toFixed(2)};
+}
+
+function render(){
+  const list=filteredNotes();
+  if(!list.length){canvas.innerHTML='<div class="empty">No visible sticky notes yet. Add one to get started.</div>';return;}
+  const layout=layoutSettings(list.length);
+  if(sortSelect.value==='position'){
+    canvas.style.minHeight='';
+  }else{
+    canvas.style.minHeight=Math.max(layout.baseHeight,layout.rows*(layout.noteHeight+layout.gap)+layout.gap)+'px';
+  }
+  canvas.innerHTML=list.map((n,index)=>{
+    const pos=arrangedPosition(n,index,layout);
+    const preview=excerpt(n.note,n.imageUrl?80:160);
+    const img=n.imageUrl?`<img class="thumb" src="${escapeHtml(n.imageUrl)}" alt="" loading="lazy">`:'';
+    const longNote = (String(n.note||'').length > preview.length);
+    const hint = (longNote || n.imageUrl) ? '<p class="expand-hint">Tap to expand</p>' : '';
+    return `<article class="note ${escapeHtml(n.color||'yellow')}" data-id="${escapeHtml(n.id)}" id="note-${escapeHtml(n.id)}" style="left:${pos.x}%;top:${pos.y}%;--tilt:${tilt(n.id)}" tabindex="0" role="button" aria-label="Open sticky note">
+    <span class="category">${escapeHtml(n.category||'General')}</span>
+    ${img}
+    <p class="note-text">${escapeHtml(preview)}</p>
+    ${hint}
+    <div class="note-meta">
+      <span>${escapeHtml(n.displayName||'Anonymous')} • ${escapeHtml(timeLabel(n.timestamp))}</span>
+      ${likeButtonHtml(n)}
+    </div>
+  </article>`;
+  }).join('');
+  canvas.querySelectorAll('.note').forEach(el=>{
+    el.addEventListener('pointerdown',startDrag);
+    el.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();openModal(el.dataset.id);}});
+  });
+  canvas.querySelectorAll('.like-btn').forEach(btn=>{
+    btn.addEventListener('click',handleLikeClick);
+    btn.addEventListener('pointerdown',ev=>ev.stopPropagation());
+    btn.addEventListener('keydown',ev=>{if(ev.key===' '||ev.key==='Enter') ev.stopPropagation();});
+  });
+}
+
+function likeButtonHtml(n){
+  const count = Number(n.likeCount||0);
+  const liked = !!n.likedByMe;
+  const label = liked ? 'Unlike sticky note' : 'Like sticky note';
+  return `<button type="button" class="like-btn ${liked?'liked':''}" data-id="${escapeHtml(n.id)}" aria-pressed="${liked}" aria-label="${label}" title="${label}"><span class="heart" aria-hidden="true">${liked?'❤':'♡'}</span><span class="like-count">${count}</span></button>`;
+}
+
+async function handleLikeClick(ev){
+  ev.stopPropagation();
+  ev.preventDefault();
+  const btn = ev.currentTarget;
+  const id = btn.dataset.id;
+  if(!id || pendingLikes.has(id)) return;
+  const note = notes.find(n=>n.id===id);
+  if(!note) return;
+  const nextLiked = !note.likedByMe;
+  note.likedByMe = nextLiked;
+  note.likeCount = Math.max(0, Number(note.likeCount||0) + (nextLiked?1:-1));
+  updateLikeUi(id, note);
+  pendingLikes.add(id);
+  try{
+    const body=new URLSearchParams({action:'like',id,clientId:CLIENT_ID,like:String(nextLiked)});
+    const res=await fetch(SCRIPT_URL,{method:'POST',body});
+    const data=await res.json();
+    if(!data.ok) throw new Error(data.error||'Could not save like.');
+    note.likedByMe = !!data.likedByMe;
+    note.likeCount = Number(data.likeCount||0);
+    updateLikeUi(id, note);
+  }catch(err){
+    note.likedByMe = !nextLiked;
+    note.likeCount = Math.max(0, Number(note.likeCount||0) + (nextLiked?-1:1));
+    updateLikeUi(id, note);
+    statusText.textContent = err.message;
+  }finally{
+    pendingLikes.delete(id);
+  }
+}
+
+function updateLikeUi(id, note){
+  document.querySelectorAll('.like-btn[data-id="'+CSS.escape(id)+'"]').forEach(btn=>{
+    btn.classList.toggle('liked', !!note.likedByMe);
+    btn.setAttribute('aria-pressed', String(!!note.likedByMe));
+    const heart = btn.querySelector('.heart');
+    if(heart) heart.textContent = note.likedByMe ? '❤' : '♡';
+    const count = btn.querySelector('.like-count');
+    if(count) count.textContent = String(note.likeCount||0);
+  });
+}
+
+function openModal(id){
+  const n=notes.find(item=>item.id===id);
+  if(!n) return;
+  modalCard.className='modal '+(n.color||'yellow');
+  modalCategory.textContent=n.category||'General';
+  if(n.imageUrl){modalImage.src=n.imageUrl;modalImage.style.display='block';modalImage.alt='Image attached to sticky note';}
+  else{modalImage.src='';modalImage.style.display='none';modalImage.alt='';}
+  modalBody.innerHTML=renderMarkdown(n.note||'');
+  modalMeta.textContent=(n.displayName||'Anonymous')+' • '+(timeLabel(n.timestamp)||'');
+  modalLike.innerHTML=likeButtonHtml(n);
+  const lb=modalLike.querySelector('.like-btn');
+  if(lb) lb.addEventListener('click',handleLikeClick);
+  modal.classList.add('show');
+  modalClose.focus();
+}
+function closeModal(){modal.classList.remove('show');modalImage.src='';modalBody.innerHTML='';modalLike.innerHTML='';}
+modalClose.addEventListener('click',closeModal);
+modal.addEventListener('click',e=>{if(e.target===modal) closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('show')) closeModal();});
+
+function startDrag(event){
+  if(SCRIPT_URL.indexOf('PASTE_YOUR')===0) return;
+  const el=event.currentTarget;
+  el.setPointerCapture(event.pointerId);
+  const rect=canvas.getBoundingClientRect();
+  const noteRect=el.getBoundingClientRect();
+  drag={el,id:el.dataset.id,offsetX:event.clientX-noteRect.left,offsetY:event.clientY-noteRect.top,rect,startX:event.clientX,startY:event.clientY,startLeft:el.style.left,startTop:el.style.top,moved:false};
+  el.addEventListener('pointermove',moveDrag);
+  el.addEventListener('pointerup',endDrag,{once:true});
+  el.addEventListener('pointercancel',endDrag,{once:true});
+}
+
+function moveDrag(event){
+  if(!drag) return;
+  const dx=event.clientX-drag.startX;
+  const dy=event.clientY-drag.startY;
+  if(!drag.moved && Math.hypot(dx,dy) < DRAG_THRESHOLD) return;
+  drag.moved=true;
+  const x=Math.max(0,Math.min(drag.rect.width-drag.el.offsetWidth,event.clientX-drag.rect.left-drag.offsetX));
+  const y=Math.max(0,Math.min(drag.rect.height-drag.el.offsetHeight,event.clientY-drag.rect.top-drag.offsetY));
+  drag.el.style.left=(x/drag.rect.width*100).toFixed(2)+'%';
+  drag.el.style.top=(y/drag.rect.height*100).toFixed(2)+'%';
+}
+
+async function endDrag(event){
+  if(!drag) return;
+  const local=drag; drag=null;
+  local.el.removeEventListener('pointermove',moveDrag);
+  if(!local.moved){
+    openModal(local.id);
+    return;
+  }
+  const x=parseFloat(local.el.style.left);
+  const y=parseFloat(local.el.style.top);
+  try{
+    const body=new URLSearchParams({action:'move',id:local.id,x,y});
+    const res=await fetch(SCRIPT_URL,{method:'POST',body});
+    const data=await res.json();
+    if(!data.ok) throw new Error(data.error||'Position was not saved.');
+    const n=notes.find(item=>item.id===local.id); if(n){n.x=x;n.y=y;}
+  }catch(err){statusText.textContent=err.message;}
+}
+
+searchInput.addEventListener('input',render);
+categoryFilter.addEventListener('change',render);
+sortSelect.addEventListener('change',render);
+window.addEventListener('resize',render);
+apiGet();
+setInterval(apiGet, REFRESH_SECONDS*1000);
+</script>
+</body>
+</html>
