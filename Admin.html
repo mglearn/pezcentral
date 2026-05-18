@@ -63,7 +63,7 @@ textarea{min-height:120px;resize:vertical;font-family:'DM Sans',sans-serif;line-
 <body>
 <header class="hero"><div class="hero-inner"><p class="eyebrow">Facilitator controls</p><h1 id="heading">StickyBoard <em>Admin</em></h1><p>Approve, hide, edit, delete, and configure the board's title, description, contact email, and moderation.</p></div></header>
 <main class="wrap">
-  <nav class="nav"><a class="btn secondary" href="index.html">View Board</a><a class="btn ghost" href="Submit.html">Submit</a><span class="status" id="statusText">Not connected</span></nav>
+  <nav class="nav"><a class="btn secondary" href="index.html">View Board</a><a class="btn ghost" href="Submit.html">Submit</a><button class="btn ghost" id="signOutBtn" style="display:none">Sign Out</button><span class="status" id="statusText">Not connected</span></nav>
 
   <section class="panel" id="loginPanel">
     <div class="login"><div><label for="passcode">Admin Passcode</label><input id="passcode" type="password" placeholder="Enter passcode from Script Properties"></div><button class="btn secondary" id="loginBtn">Open Admin</button></div>
@@ -91,7 +91,12 @@ textarea{min-height:120px;resize:vertical;font-family:'DM Sans',sans-serif;line-
 <script src="config.js"></script>
 <script>
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+const PASSCODE_KEY = 'stickyboard.passcode';
 let passcode='', notes=[];
+function rememberPasscode(p){ try{ sessionStorage.setItem(PASSCODE_KEY, p); }catch(err){} }
+function forgetPasscode(){ try{ sessionStorage.removeItem(PASSCODE_KEY); }catch(err){} passcode=''; }
+function recallPasscode(){ try{ return sessionStorage.getItem(PASSCODE_KEY) || ''; }catch(err){ return ''; } }
+function isAuthError(msg){ msg=String(msg||'').toLowerCase(); return msg.includes('passcode'); }
 const pendingImage = {}; // id -> {dataUrl, mime, name}
 const pendingRemove = {}; // id -> true
 const loginPanel=document.getElementById('loginPanel'), adminPanel=document.getElementById('adminPanel'), passInput=document.getElementById('passcode'),
@@ -99,7 +104,8 @@ const loginPanel=document.getElementById('loginPanel'), adminPanel=document.getE
       okMsg=document.getElementById('okMsg'), errMsg=document.getElementById('errMsg'), loginError=document.getElementById('loginError'),
       searchInput=document.getElementById('searchInput'), statusFilter=document.getElementById('statusFilter'),
       boardTitle=document.getElementById('boardTitle'), boardDescription=document.getElementById('boardDescription'), contactEmail=document.getElementById('contactEmail'),
-      rssLink=document.getElementById('rssLink'), heading=document.getElementById('heading');
+      rssLink=document.getElementById('rssLink'), heading=document.getElementById('heading'),
+      signOutBtn=document.getElementById('signOutBtn');
 function escapeHtml(str){return String(str==null?'':str).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 function applyBoardTitle(title){
   const sub = title ? ' <span class="sub">&mdash; '+escapeHtml(title)+'</span>' : '';
@@ -127,7 +133,8 @@ async function adminPost(params){
   if(!data.ok) throw new Error(data.error||'Request failed.');
   return data;
 }
-async function loadAdmin(){
+async function loadAdmin(opts){
+  const silent = opts && opts.silent;
   try{
     const data=await adminPost({action:'adminList'});
     notes=data.notes||[];
@@ -138,9 +145,30 @@ async function loadAdmin(){
     applyBoardTitle(boardTitle.value);
     statusText.textContent=(notes.length===1?'1 note':notes.length+' notes')+' • '+(data.moderationEnabled?'Moderated':'Open posting');
     loginPanel.style.display='none';adminPanel.style.display='block';
+    signOutBtn.style.display='';
+    rememberPasscode(passcode);
+    passInput.value='';
     render();
   }
-  catch(err){show(loginError,err.message);statusText.textContent='Connection issue';}
+  catch(err){
+    if(isAuthError(err.message)){
+      forgetPasscode();
+      loginPanel.style.display='';adminPanel.style.display='none';signOutBtn.style.display='none';
+      if(!silent) show(loginError,err.message);
+    }else{
+      if(!silent) show(loginError,err.message);
+    }
+    statusText.textContent='Connection issue';
+  }
+}
+
+function signOut(){
+  forgetPasscode();
+  notes=[];
+  loginPanel.style.display='';adminPanel.style.display='none';signOutBtn.style.display='none';
+  statusText.textContent='Signed out';
+  passInput.value='';
+  passInput.focus();
 }
 function render(){
   const term=searchInput.value.trim().toLowerCase(), stat=statusFilter.value;
@@ -242,7 +270,10 @@ document.getElementById('saveSettingsBtn').addEventListener('click',async()=>{
   }catch(err){show(errMsg,err.message)}
 });
 searchInput.addEventListener('input',render);statusFilter.addEventListener('change',render);
+signOutBtn.addEventListener('click',signOut);
 loadPublicSettings();
+const remembered=recallPasscode();
+if(remembered){ passcode=remembered; loadAdmin({silent:true}); }
 </script>
 </body>
 </html>
