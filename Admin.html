@@ -87,8 +87,8 @@ textarea{min-height:120px;resize:vertical;font-family:'DM Sans',sans-serif;line-
     <section id="notesGrid" class="grid"></section>
   </section>
 </main>
+<script src="config.js"></script>
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzOKvnxrwAwdVd3sNbNuyolBaSCrrUYOJvfPpdPl_v-YiTiyms7F3jU0FlzEQUhG1po/exec';
 const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
 let passcode='', notes=[];
 const pendingImage = {}; // id -> {dataUrl, mime, name}

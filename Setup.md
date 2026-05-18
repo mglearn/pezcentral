@@ -11,6 +11,7 @@ StickyBoard fills a Jamboard-style need without requiring a paid FigJam, Lucidsp
 | `index.html` | Public sticky-note canvas. Participants can view and move visible sticky notes. |
 | `Submit.html` | Public form for adding sticky notes. |
 | `Admin.html` | Password-protected facilitator console for moderation, editing, deletion, and settings. |
+| `config.js` | One-line file that holds the Apps Script Web App URL. Shared by all three pages. |
 | `code.gs` | Google Apps Script backend connected to a Google Sheet. |
 | `Setup.md` | This setup guide. |
 
@@ -109,19 +110,15 @@ https://script.google.com/macros/s/AKfycb.../exec
 
 ## Step 5: Connect the HTML Files to Apps Script
 
-Open each of these files:
+Open `config.js`. You only edit this one file &mdash; `index.html`, `Submit.html`, and `Admin.html` all load it.
 
-- `index.html`
-- `Submit.html`
-- `Admin.html`
-
-Find this line in each file:
+Find this line:
 
 ```javascript
 const SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
 ```
 
-Replace the placeholder with your Apps Script Web App URL.
+Replace the value with your Apps Script Web App URL.
 
 Example:
 
@@ -129,7 +126,7 @@ Example:
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbYOUR_DEPLOYMENT_ID/exec';
 ```
 
-Save all three files.
+Save `config.js`. The three HTML files do not need to change.
 
 ## Step 6: Publish or Share the HTML Files
 
@@ -142,13 +139,16 @@ You can host the three HTML files in any simple static hosting location, such as
 - Your school or organization web server
 - A local shared folder for testing
 
-Keep these three files in the same folder:
+Keep these four files in the same folder:
 
 ```text
 index.html
 Submit.html
 Admin.html
+config.js
 ```
+
+`config.js` must live alongside the HTML files. Each HTML page loads it with `<script src="config.js"></script>` so they all see the same `SCRIPT_URL`.
 
 The links are already built in:
 
@@ -265,15 +265,13 @@ StickyBoard includes a built-in digital citizenship section. Before using it wit
 
 ### The board says “Backend not configured”
 
-The Apps Script URL has not been pasted into one or more HTML files.
+The Apps Script URL has not been pasted into `config.js`, or `config.js` is missing from the folder.
 
 Check:
 
-- `index.html`
-- `Submit.html`
-- `Admin.html`
-
-Make sure each file has the same Web App URL in `SCRIPT_URL`.
+- `config.js` exists in the same folder as `index.html`, `Submit.html`, and `Admin.html`.
+- The `SCRIPT_URL` value in `config.js` is your Apps Script Web App URL (not the `PASTE_YOUR_...` placeholder).
+- Your browser is not blocking `config.js` (open the page's developer console and look for a 404 on `config.js`).
 
 ### The admin page says the passcode is not set
 
