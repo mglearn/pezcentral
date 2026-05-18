@@ -6,4 +6,4 @@
 // 2. Replace the value below with that URL.
 // 3. Keep this file (config.js) in the same folder as the three HTML files.
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOKvnxrwAwdVd3sNbNuyolBaSCrrUYOJvfPpdPl_v-YiTiyms7F3jU0FlzEQUhG1po/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzsO4olJaLLsymF19I8_FD9MrGf4dIzzufNptXPjG2db-DYNT7zDrZMMXMrbQM1WRfY/exec';
