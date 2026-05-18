@@ -14,6 +14,7 @@ body{margin:0;font-family:'DM Sans',sans-serif;background:var(--pale);color:var(
 .eyebrow{letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-size:12px;font-weight:800;margin:0 0 8px}
 h1{font-family:'DM Serif Display',serif;font-size:clamp(34px,6vw,58px);line-height:1;margin:0 0 10px;font-weight:400}
 h1 em{color:var(--gold);font-style:italic}
+h1 .sub{font-size:.7em;color:#d6def2;font-style:normal;font-weight:400}
 .hero p{color:#d6def2;margin:0;font-size:17px}
 .wrap{padding:24px 20px 40px}
 .nav,.panel,.note-card{background:white;border:1.5px solid var(--line);border-radius:16px;box-shadow:0 8px 22px rgba(10,52,118,.06)}
@@ -60,7 +61,7 @@ textarea{min-height:120px;resize:vertical;font-family:'DM Sans',sans-serif;line-
 </style>
 </head>
 <body>
-<header class="hero"><div class="hero-inner"><p class="eyebrow">Facilitator controls</p><h1>StickyBoard <em>Admin</em></h1><p>Approve, hide, edit, delete, and configure the board's title, description, contact email, and moderation.</p></div></header>
+<header class="hero"><div class="hero-inner"><p class="eyebrow">Facilitator controls</p><h1 id="heading">StickyBoard <em>Admin</em></h1><p>Approve, hide, edit, delete, and configure the board's title, description, contact email, and moderation.</p></div></header>
 <main class="wrap">
   <nav class="nav"><a class="btn secondary" href="index.html">View Board</a><a class="btn ghost" href="Submit.html">Submit</a><span class="status" id="statusText">Not connected</span></nav>
 
@@ -98,8 +99,21 @@ const loginPanel=document.getElementById('loginPanel'), adminPanel=document.getE
       okMsg=document.getElementById('okMsg'), errMsg=document.getElementById('errMsg'), loginError=document.getElementById('loginError'),
       searchInput=document.getElementById('searchInput'), statusFilter=document.getElementById('statusFilter'),
       boardTitle=document.getElementById('boardTitle'), boardDescription=document.getElementById('boardDescription'), contactEmail=document.getElementById('contactEmail'),
-      rssLink=document.getElementById('rssLink');
+      rssLink=document.getElementById('rssLink'), heading=document.getElementById('heading');
 function escapeHtml(str){return String(str==null?'':str).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function applyBoardTitle(title){
+  const sub = title ? ' <span class="sub">&mdash; '+escapeHtml(title)+'</span>' : '';
+  heading.innerHTML = 'StickyBoard <em>Admin</em>'+sub;
+  document.title = (title ? 'StickyBoard - '+title : 'StickyBoard')+' | Admin';
+}
+async function loadPublicSettings(){
+  if(SCRIPT_URL.indexOf('PASTE_YOUR')===0) return;
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=settings&_='+Date.now());
+    const data=await res.json();
+    if(data && data.ok) applyBoardTitle(data.boardTitle||'');
+  }catch(err){/* leave default heading */}
+}
 function show(el,msg){el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',3500)}
 function timeLabel(value){const d=new Date(value); if(isNaN(d)) return ''; return d.toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});}
 rssLink.href = SCRIPT_URL + '?action=rss';
@@ -121,6 +135,7 @@ async function loadAdmin(){
     boardTitle.value=data.boardTitle||'';
     boardDescription.value=data.boardDescription||'';
     contactEmail.value=data.contactEmail||'';
+    applyBoardTitle(boardTitle.value);
     statusText.textContent=(notes.length===1?'1 note':notes.length+' notes')+' • '+(data.moderationEnabled?'Moderated':'Open posting');
     loginPanel.style.display='none';adminPanel.style.display='block';
     render();
@@ -227,6 +242,7 @@ document.getElementById('saveSettingsBtn').addEventListener('click',async()=>{
   }catch(err){show(errMsg,err.message)}
 });
 searchInput.addEventListener('input',render);statusFilter.addEventListener('change',render);
+loadPublicSettings();
 </script>
 </body>
 </html>
