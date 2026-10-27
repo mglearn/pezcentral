@@ -463,7 +463,12 @@ function ensureHeaders(sheet) {
 }
 
 function appendRow(sheet, row) {
-  sheet.appendRow(SHEET_HEADERS.map(function (h) { return row[h] !== undefined ? row[h] : ''; }));
+  sheet.appendRow(SHEET_HEADERS.map(function (h) { return sheetSafe(row[h] !== undefined ? row[h] : ''); }));
+}
+
+// Prevent spreadsheet formula injection: text starting with = + - @ is stored as literal text.
+function sheetSafe(value) {
+  return (typeof value === 'string' && /^[=+\-@]/.test(value)) ? "'" + value : value;
 }
 
 function readSheet(sheet) {
@@ -494,7 +499,7 @@ function findRowById(sheet, id) {
 function setCell(sheet, found, header, value) {
   const col = found.headers.indexOf(header) + 1;
   if (col <= 0) throw new Error('Missing column: ' + header);
-  sheet.getRange(found.rowIndex, col).setValue(value);
+  sheet.getRange(found.rowIndex, col).setValue(sheetSafe(value));
 }
 
 function getCell(sheet, found, header) {
